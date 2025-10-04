@@ -1,0 +1,4 @@
+project_id = "etqhcffukkdlhsiusitd"
+
+[functions.krishi-chatbot]
+verify_jwt = false
