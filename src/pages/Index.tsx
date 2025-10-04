@@ -61,7 +61,7 @@ const Index = () => {
             </div>
 
             <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary via-farm to-harvest bg-clip-text text-transparent">
-              KrishiKhel
+              HARVESTRA
             </h1>
 
             <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
@@ -99,12 +99,12 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">Active Farmers</p>
               </div>
               <div className="text-center p-4 bg-card/50 backdrop-blur rounded-lg border border-border">
-                <p className="text-3xl font-bold text-success">78%</p>
+                <p className="text-3xl font-bold text-success">89%</p>
                 <p className="text-sm text-muted-foreground">Adoption Rate</p>
               </div>
               <div className="text-center p-4 bg-card/50 backdrop-blur rounded-lg border border-border">
-                <p className="text-3xl font-bold text-harvest">₹12L</p>
-                <p className="text-sm text-muted-foreground">Rewards Given</p>
+                <p className="text-3xl font-bold text-harvest">9000+</p>
+                <p className="text-sm text-muted-foreground">Total Quest Completed Already</p>
               </div>
             </div>
           </div>
@@ -114,7 +114,7 @@ const Index = () => {
       {/* Features Section */}
       <div className="max-w-7xl mx-auto px-4 py-16">
         <h2 className="text-3xl font-bold text-center mb-12">
-          Why Farmers Love KrishiKhel
+          Why Farmers Love Harvestra
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -158,7 +158,7 @@ const Index = () => {
       <footer className="border-t border-border">
         <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
           <div>
-            <h4 className="font-semibold mb-2">KrishiKhel Kerala</h4>
+            <h4 className="font-semibold mb-2">Harvestra Kerala</h4>
             <p className="text-muted-foreground">Play, Learn & Earn – Sustainable Farming for Kerala Farmers.</p>
           </div>
           <div>
