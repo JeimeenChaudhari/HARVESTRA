@@ -14,6 +14,7 @@ interface Message {
 
 const KrishiBot = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [botLanguage, setBotLanguage] = useState<'en' | 'ml' | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -21,11 +22,30 @@ const KrishiBot = () => {
   const { language, t } = useLanguage();
   const { toast } = useToast();
 
+  // Initialize with greeting when opened
+  useEffect(() => {
+    if (isOpen && messages.length === 0 && !botLanguage) {
+      setMessages([{
+        role: 'assistant',
+        content: 'Hello! I\'m KrishiBot, your farming assistant. 🌱\n\nനമസ്കാരം! ഞാൻ KrishiBot, നിങ്ങളുടെ കൃഷി സഹായി. 🌱\n\nPlease select your preferred language:\nദയവായി നിങ്ങളുടെ ഭാഷ തിരഞ്ഞെടുക്കുക:'
+      }]);
+    }
+  }, [isOpen, messages.length, botLanguage]);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const selectLanguage = (lang: 'en' | 'ml') => {
+    setBotLanguage(lang);
+    const welcomeMessage = lang === 'en'
+      ? 'Great! I\'ll respond in English. Ask me anything about sustainable farming, crops, pest control, irrigation, or organic farming methods. 🌾'
+      : 'നന്നായി! ഞാർ മലയാളത്തിൽ പ്രതികരിക്കും. സുസ്ഥിര കൃഷി, വിളകൾ, കീടനിയന്ത്രണം, ജലസേചനം, അല്ലെങ്കിൽ ജൈവ കൃഷിരീതികൾ എന്നിവയെക്കുറിച്ച് എന്തും ചോദിക്കൂ. 🌾';
+    
+    setMessages(prev => [...prev, { role: 'assistant', content: welcomeMessage }]);
+  };
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -43,14 +63,15 @@ const KrishiBot = () => {
       const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       
       if (!supabaseUrl || !supabaseKey) {
-        throw new Error('Supabase configuration missing');
+        console.warn('Supabase configuration missing - using offline mode');
+        throw new Error('Offline mode');
       }
 
       const CHAT_URL = `${supabaseUrl}/functions/v1/krishi-chatbot`;
       
       // Add timeout to prevent hanging
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
       const response = await fetch(CHAT_URL, {
         method: 'POST',
@@ -60,7 +81,7 @@ const KrishiBot = () => {
         },
         body: JSON.stringify({
           messages: [...messages, userMessage],
-          language
+          language: botLanguage || language
         }),
         signal: controller.signal
       });
@@ -161,14 +182,20 @@ const KrishiBot = () => {
           }
         }
       }
+      
+      // If no content was received, throw an error to trigger fallback
+      if (!assistantContent) {
+        throw new Error('No response content');
+      }
     } catch (error) {
       console.error('Chat error:', error);
       
       // Provide context-aware fallback responses
       const userMessageLower = userMessage.content.toLowerCase();
       let fallbackResponse = '';
+      const selectedLang = botLanguage || language;
       
-      if (language === 'ml') {
+      if (selectedLang === 'ml') {
         if (userMessageLower.includes('വള്ളം') || userMessageLower.includes('വളം')) {
           fallbackResponse = "കൃഷിയിൽ ജൈവ വളം ഉപയോഗിക്കുന്നത് മികച്ച ഫലം നൽകും. കമ്പോസ്റ്റ്, പച്ച വളം, ജീവാമൃതം എന്നിവ പരീക്ഷിച്ചുനോക്കൂ.";
         } else if (userMessageLower.includes('വെള്ളം') || userMessageLower.includes('നനയ്ക്കൽ')) {
@@ -194,11 +221,15 @@ const KrishiBot = () => {
       
       setMessages(prev => [...prev, { role: 'assistant', content: fallbackResponse }]);
       
-      toast({
-        title: t('error') || 'Error',
-        description: "API temporarily unavailable. Showing helpful farming tips.",
-        variant: "destructive",
-      });
+      // Only show toast for non-offline errors
+      if (!(error instanceof Error && error.message === 'Offline mode')) {
+        toast({
+          title: selectedLang === 'ml' ? 'ഓഫ്‌ലൈൻ മോഡ്' : 'Offline Mode',
+          description: selectedLang === 'ml' 
+            ? 'ഉപകാരപ്രദമായ കൃഷി ടിപ്പുകൾ കാണിക്കുന്നു' 
+            : 'Showing helpful farming tips based on your question.',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -213,20 +244,20 @@ const KrishiBot = () => {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button - Adjusted for mobile bottom bar */}
       {!isOpen && (
         <Button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90"
+          className="fixed bottom-6 right-6 md:bottom-6 max-md:bottom-20 h-14 w-14 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90"
           size="icon"
         >
           <MessageCircle className="h-6 w-6" />
         </Button>
       )}
 
-      {/* Chat Window */}
+      {/* Chat Window - Adjusted for mobile */}
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 w-96 h-[600px] shadow-2xl z-50 flex flex-col">
+        <Card className="fixed bottom-6 right-6 md:bottom-6 max-md:bottom-20 w-96 max-md:w-[calc(100vw-2rem)] max-md:left-4 max-md:right-4 h-[600px] max-md:h-[calc(100vh-10rem)] shadow-2xl z-50 flex flex-col">
           {/* Header */}
           <div className="bg-primary text-primary-foreground p-4 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -241,7 +272,16 @@ const KrishiBot = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false);
+                // Reset on close to start fresh next time
+                setTimeout(() => {
+                  setMessages([]);
+                  setBotLanguage(null);
+                  setInput("");
+                  setIsLoading(false);
+                }, 300);
+              }}
               className="text-primary-foreground hover:bg-primary/90"
             >
               <X className="h-5 w-5" />
@@ -250,14 +290,23 @@ const KrishiBot = () => {
 
           {/* Messages */}
           <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-            {messages.length === 0 && (
-              <div className="text-center text-muted-foreground py-8">
-                <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">
-                  {language === 'ml'
-                    ? 'എന്തെങ്കിലും ചോദിക്കൂ...'
-                    : 'Ask me anything about sustainable farming...'}
-                </p>
+            {/* Language Selection */}
+            {!botLanguage && messages.length > 0 && (
+              <div className="flex gap-2 justify-center mb-4">
+                <Button
+                  onClick={() => selectLanguage('en')}
+                  className="flex-1 max-w-[150px]"
+                  variant="default"
+                >
+                  English 🇬🇧
+                </Button>
+                <Button
+                  onClick={() => selectLanguage('ml')}
+                  className="flex-1 max-w-[150px]"
+                  variant="default"
+                >
+                  മലയാളം 🇮🇳
+                </Button>
               </div>
             )}
             <div className="space-y-4">
@@ -295,15 +344,17 @@ const KrishiBot = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={
-                  language === 'ml'
-                    ? 'ഒരു സന്ദേശം ടൈപ്പ് ചെയ്യൂ...'
-                    : 'Type a message...'
+                  !botLanguage
+                    ? 'Select language first / മുൻപ് ഭാഷ തിരഞ്ഞെടുക്കുക'
+                    : botLanguage === 'ml'
+                      ? 'ഒരു സന്ദേശം ടൈപ്പ് ചെയ്യൂ...'
+                      : 'Type a message...'
                 }
-                disabled={isLoading}
+                disabled={isLoading || !botLanguage}
               />
               <Button
                 onClick={sendMessage}
-                disabled={isLoading || !input.trim()}
+                disabled={isLoading || !input.trim() || !botLanguage}
                 size="icon"
               >
                 <Send className="h-4 w-4" />

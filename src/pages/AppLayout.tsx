@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { BottomBar } from "@/components/ui/bottom-bar";
 import { 
   LayoutDashboard, 
   Target, 
@@ -42,6 +43,15 @@ const AppLayout = () => {
     { name: "Notifications", path: "/app/notifications", icon: Bell },
     { name: "Profile", path: "/app/profile", icon: User },
     { name: "Settings", path: "/app/settings", icon: Settings },
+  ];
+
+  // Bottom bar items for mobile (5 most important items)
+  const bottomBarItems = [
+    { name: "Home", path: "/app", icon: LayoutDashboard },
+    { name: "Learn", path: "/app/learn", icon: GraduationCap },
+    { name: "Missions", path: "/app/missions", icon: Rocket },
+    { name: "Community", path: "/app/community", icon: Users },
+    { name: "Profile", path: "/app/profile", icon: User },
   ];
 
   const SidebarContent = () => (
@@ -93,10 +103,10 @@ const AppLayout = () => {
         <SidebarContent />
       </aside>
 
-      {/* Mobile Sidebar */}
+      {/* Mobile Sidebar Sheet (triggered from bottom bar or header) */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetTrigger asChild className="md:hidden">
-          <Button variant="outline" size="icon" className="fixed top-4 left-4 z-50">
+          <Button variant="outline" size="icon" className="fixed top-4 right-4 z-50 shadow-md">
             <Menu className="w-5 h-5" />
           </Button>
         </SheetTrigger>
@@ -106,9 +116,14 @@ const AppLayout = () => {
       </Sheet>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <Outlet />
+      <main className="flex-1 overflow-y-auto pb-0 md:pb-0">
+        <div className="pb-16 md:pb-0">
+          <Outlet />
+        </div>
       </main>
+
+      {/* Mobile Bottom Bar */}
+      <BottomBar items={bottomBarItems} />
     </div>
   );
 };
